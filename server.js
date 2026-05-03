@@ -48,7 +48,7 @@ async function seedData() {
   if (!room) { const rooms = [["LHC-101","LHC",60],["LHC-102","LHC",60],["ATR-101","ATR",80],["TIFAC-Lab1","TIFAC",40]]; for (const [n,b,c] of rooms) await dbRun("INSERT INTO rooms VALUES (?,?,?,?)", [uid(),n,b,c]); }
 }
 
-function authenticate(req) { const auth = req.headers.authorization || ""; if (!auth.startsWith("Bearer ")) return null; return dbGet(`SELECT s.token, u.id, u.identifier, u.name, u.role, u.is_temp FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ?`, [auth.slice(7), new Date().toISOString()]); }
+function authenticate(req) { const auth = req.headers.authorization || ""; if (!auth.startsWith("Bearer ")) return null; const sess = dbGet(`SELECT s.token, u.id, u.identifier, u.name, u.role, u.is_temp FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ?`, [auth.slice(7), new Date().toISOString()]); if (sess) sess.role = sess.role?.toUpperCase(); return sess; }
 function requireAuth(req, res) { const sess = authenticate(req); if (!sess) { json(res, 401, { error: "Unauthorized." }); return null; } return sess; }
 function requireAdmin(req, res) { const sess = requireAuth(req, res); if (!sess) return null; if (sess.role?.toUpperCase() !== "ADMIN") { json(res, 403, { error: "Admin only." }); return null; } return sess; }
 function json(res, code, body) { res.writeHead(code, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }); res.end(JSON.stringify(body)); }
