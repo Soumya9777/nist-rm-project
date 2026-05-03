@@ -42,7 +42,7 @@ async function seedData() {
   const defaults = [{ id: "admin001", identifier: "nist@admin", name: "NIST Admin", role: "ADMIN", pwd: "nist@123", temp: 0 }, { id: "student001", identifier: "202456714", name: "Soumya Ranjan Sahu", role: "Student", pwd: "student@123", temp: 1 }];
   for (const u of defaults) {
     const exists = await dbGet("SELECT id FROM users WHERE identifier=?", [u.identifier]);
-    if (!exists) { const salt = crypto.randomBytes(16).toString("hex"); await dbRun("INSERT INTO users VALUES (?,?,?,?,?,?,?,?)", [u.id, u.identifier, u.name, u.role, salt, hashPwd(u.pwd, salt), u.temp, new Date().toISOString()]); }
+    if (!exists) { const salt = crypto.randomBytes(16).toString("hex"); await dbRun("INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?)", [u.id, u.identifier, u.name, u.role, salt, hashPwd(u.pwd, salt), u.temp, new Date().toISOString()]); }
   }
   const room = await dbGet("SELECT id FROM rooms LIMIT 1");
   if (!room) { const rooms = [["LHC-101","LHC",60],["LHC-102","LHC",60],["ATR-101","ATR",80],["TIFAC-Lab1","TIFAC",40]]; for (const [n,b,c] of rooms) await dbRun("INSERT INTO rooms VALUES (?,?,?,?)", [uid(),n,b,c]); }
