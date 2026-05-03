@@ -4,5 +4,5 @@
   "description": "NIST Resource Management System",
   "main": "server.js",
   "scripts": { "start": "node server.js", "dev": "node server.js" },
-  "dependencies": { "mysql2": "^3.6.0" }
+  "dependencies": { "pg": "^8.16.3" }
 }
