@@ -117,11 +117,13 @@ function updateStats() {
 
 function searchRooms() {
   const day = $("r-day").value;
+  const building = $("r-building").value;
+  const minCap = Number($("r-cap").value) || 0;
   const fromM = timeToMins($("r-from").value), toM = timeToMins($("r-to").value);
   if (!day) { $("room-results").innerHTML=`<p class="msg-err" style="margin-top:8px">Select a day.</p>`; return; }
   if (fromM===null||toM===null||toM<=fromM) { $("room-results").innerHTML=`<p class="msg-err" style="margin-top:8px">Invalid time.</p>`; return; }
   const occupied = new Set(S.data.schedule.filter(e => { if (e.day !== day) return false; const { s, e: end } = slotToMins(e.slot); return overlap(fromM, toM, s, end); }).map(e => e.roomId));
-  const free = S.data.rooms.filter(r => !occupied.has(r.id));
+  const free = S.data.rooms.filter(r => !occupied.has(r.id) && (building === "ALL" || r.building === building) && r.capacity >= minCap);
   if (!free.length) { $("room-results").innerHTML = `<div class="empty-state"><div class="icon">🚫</div><p>No free rooms.</p></div>`; return; }
   $("room-results").innerHTML = `<p style="color:var(--muted);margin-bottom:16px">${free.length} rooms available</p><div class="results-grid">` + free.map(r => `<div class="result-card"><strong>${esc(r.name)}</strong><p>${esc(r.building)}</p><p>${r.capacity} seats</p><span class="badge badge-free">✓ Free</span><button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="quickBook('${esc(r.id)}','${esc(r.name)}','${esc(day)}','${esc($("r-from").value)}','${esc($("r-to").value)}')">Book</button></div>`).join("") + `</div>`;
 }

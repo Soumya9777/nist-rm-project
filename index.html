@@ -88,6 +88,8 @@
           <div class="section-head"><h3>Room Availability</h3><p>Find unoccupied rooms</p></div>
           <div class="filter-form">
             <label>Day<select id="r-day"><option value="">Select Day</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></label>
+            <label>Building<select id="r-building"><option value="ALL">All</option><option>LHC</option><option>ATR</option><option>TIFAC</option></select></label>
+            <label>Min Capacity<input id="r-cap" type="number" placeholder="Any" /></label>
             <label>From <input id="r-from" type="time" value="09:00" /></label>
             <label>To <input id="r-to" type="time" value="10:00" /></label>
             <button class="btn btn-primary" onclick="searchRooms()">Search</button>
