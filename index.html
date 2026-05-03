@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIST Resource Management</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <img src="./nist.png" alt="NIST Logo" class="login-logo" />
+    <p class="login-eyebrow">NIST Smart Campus</p>
+    <h1 class="login-title">Resource Management</h1>
+    <form class="login-form" id="login-form">
+      <label>Roll No / Employee ID<input id="f-id" name="identifier" placeholder="e.g. 202456714" required autocomplete="username" /></label>
+      <label>Password<input id="f-pwd" name="password" type="password" placeholder="Password" required autocomplete="current-password" /></label>
+      <button class="btn btn-primary btn-full" type="submit">Sign In</button>
+      <p id="login-msg" class="msg"></p>
+    </form>
+  </div>
+</div>
+
+<div id="pw-modal" class="modal-bg hidden">
+  <div class="modal-card">
+    <h2 class="modal-title">Set Your Password</h2>
+    <p class="modal-sub">Please set a new password (min 6 characters)</p>
+    <form id="pw-form" style="display:flex;flex-direction:column;gap:14px">
+      <label>New Password <input id="pw-new" type="password" placeholder="New password" required /></label>
+      <label>Confirm Password <input id="pw-confirm" type="password" placeholder="Confirm password" required /></label>
+      <button class="btn btn-primary" type="submit">Update Password</button>
+      <p id="pw-msg" class="msg"></p>
+    </form>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="./nist.png" alt="NIST" class="sidebar-logo" />
+      <div class="sidebar-brand-text"><p>NIST</p><h2>Resource Mgmt</h2></div>
+    </div>
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Main</span>
+      <button class="nav-btn active" data-view="dashboard" onclick="nav('dashboard')">⊞ Dashboard</button>
+      <button class="nav-btn" data-view="rooms" onclick="nav('rooms')">🚪 Room Availability</button>
+      <button class="nav-btn" data-view="mybookings" onclick="nav('mybookings')">📋 My Bookings</button>
+      <button class="nav-btn" data-view="teachers" onclick="nav('teachers')">👨‍🏫 Teacher Availability</button>
+      <span class="nav-section-label" id="admin-label" style="display:none">Admin</span>
+      <button class="nav-btn hidden" id="nav-add-schedule" data-view="add-schedule" onclick="nav('add-schedule')">➕ Add Time Table</button>
+      <button class="nav-btn hidden" id="nav-manage" data-view="manage" onclick="nav('manage')">⚙️ Manage Resources</button>
+      <button class="nav-btn hidden" id="nav-users" data-view="users" onclick="nav('users')">👥 Manage Users</button>
+      <button class="nav-btn hidden" id="nav-bookings" data-view="bookings" onclick="nav('bookings')">📋 Room Bookings</button>
+    </nav>
+    <div class="sidebar-footer"><button class="btn btn-secondary btn-full" onclick="logout()">Sign Out</button></div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+      <div class="topbar-right">
+        <div id="clock-date" class="clock-date"></div>
+        <button class="btn btn-secondary btn-sm" onclick="openHistory()">History</button>
+        <div class="user-chip"><strong id="user-name">—</strong><span id="user-role">—</span></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div id="v-dashboard" class="view active">
+        <div class="stats-row">
+          <div class="stat-card"><p class="stat-label">Total Rooms</p><p class="stat-value" id="s-rooms">—</p><p class="stat-desc">on campus</p></div>
+          <div class="stat-card"><p class="stat-label">Faculty</p><p class="stat-value" id="s-faculty">—</p><p class="stat-desc">teaching staff</p></div>
+          <div class="stat-card"><p class="stat-label">Today's Classes</p><p class="stat-value" id="s-today">—</p><p class="stat-desc" id="s-today-day">scheduled</p></div>
+          <div class="stat-card"><p class="stat-label">Free Now</p><p class="stat-value" id="s-free">—</p><p class="stat-desc">in current slot</p></div>
+        </div>
+        <div class="card">
+          <p class="card-title">Quick Access</p>
+          <div class="quick-links">
+            <button class="quick-link-card" onclick="nav('rooms')"><span class="ql-icon">🚪</span><strong>Room Availability</strong><span>Find free rooms</span></button>
+            <button class="quick-link-card" onclick="nav('teachers')"><span class="ql-icon">👨‍🏫</span><strong>Teacher Availability</strong><span>Find free teachers</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="v-rooms" class="view">
+        <div class="card">
+          <div class="section-head"><h3>Room Availability</h3><p>Find unoccupied rooms</p></div>
+          <div class="filter-form">
+            <label>Day<select id="r-day"><option value="">Select Day</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></label>
+            <label>From <input id="r-from" type="time" value="09:00" /></label>
+            <label>To <input id="r-to" type="time" value="10:00" /></label>
+            <button class="btn btn-primary" onclick="searchRooms()">Search</button>
+          </div>
+          <div id="room-results"></div>
+        </div>
+      </div>
+
+      <div id="v-mybookings" class="view">
+        <div class="card">
+          <div class="section-head"><h3>My Bookings</h3><p>View your booking status</p></div>
+          <div class="table-wrap" id="my-bookings-table">Loading...</div>
+        </div>
+      </div>
+
+      <div id="v-teachers" class="view">
+        <div class="card">
+          <div class="section-head"><h3>Teacher Availability</h3><p>Find free teachers</p></div>
+          <div class="filter-form">
+            <label>Day<select id="t-day"><option value="">Select Day</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></label>
+            <label>From <input id="t-from" type="time" value="09:00" /></label>
+            <label>To <input id="t-to" type="time" value="10:00" /></label>
+            <button class="btn btn-primary" onclick="searchTeachers()">Search</button>
+          </div>
+          <div id="teacher-results"></div>
+        </div>
+      </div>
+
+      <div id="v-add-schedule" class="view">
+        <div class="card">
+          <div class="section-head"><h3>Add Time Table</h3></div>
+          <div class="form-grid cols-3">
+            <label>Day<select id="as-day"><option value="">Select Day</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></label>
+            <label>Start<select id="as-start-time"><option>09:00</option><option>10:00</option><option>11:15</option><option>12:15</option><option>02:00</option><option>03:00</option></select></label>
+            <label>End<select id="as-end-time"><option>10:00</option><option>11:00</option><option>12:15</option><option>01:15</option><option>03:00</option><option>04:00</option></select></label>
+            <label>Teacher<select id="as-faculty"><option>Loading...</option></select></label>
+            <label>Room<select id="as-room"><option>Loading...</option></select></label>
+            <label>Subject<input id="as-subject" placeholder="e.g. Data Structures" /></label>
+            <label style="grid-column:span 3">Section<input id="as-section" placeholder="e.g. CSE-2A" /></label>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addSchedule()">Add Entry</button></div>
+          <p id="as-msg" class="msg"></p>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="section-head"><h3>Current Time Table</h3></div>
+          <div class="table-wrap" id="schedule-table"></div>
+        </div>
+      </div>
+
+      <div id="v-manage" class="view">
+        <div class="card">
+          <div class="section-head"><h3>Add Room</h3></div>
+          <div class="form-grid">
+            <label>Room Name <input id="mr-name" placeholder="e.g. LHC-504" /></label>
+            <label>Building <input id="mr-bldg" placeholder="e.g. LHC" /></label>
+            <label>Capacity <input id="mr-cap" type="number" placeholder="60" /></label>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addRoom()">Add Room</button></div>
+          <p id="mr-msg" class="msg"></p>
+        </div>
+        <div class="card">
+          <div class="section-head"><h3>Add Teacher</h3></div>
+          <div class="form-grid">
+            <label>Employee ID <input id="mt-eid" placeholder="e.g. NISTEMP010" /></label>
+            <label>Full Name <input id="mt-name" placeholder="e.g. Dr. A. Sharma" /></label>
+            <label>Password <input id="mt-pwd" type="password" placeholder="Min 6 chars" /></label>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addTeacher()">Add Teacher</button></div>
+          <p id="mt-msg" class="msg"></p>
+        </div>
+      </div>
+
+      <div id="v-users" class="view">
+        <div class="card">
+          <div class="section-head"><h3>Manage Users</h3></div>
+          <input type="text" id="user-search" placeholder="Search by Name or ID..." oninput="filterUsers()" style="margin-bottom:16px" />
+          <div class="table-wrap" id="users-table">Loading...</div>
+          <p id="users-msg" class="msg"></p>
+        </div>
+      </div>
+
+      <div id="v-bookings" class="view">
+        <div class="card">
+          <div class="section-head"><h3>Room Bookings</h3><p>Approve or reject requests</p></div>
+          <div class="table-wrap" id="admin-bookings-table">Loading...</div>
+          <p id="bookings-msg" class="msg"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
