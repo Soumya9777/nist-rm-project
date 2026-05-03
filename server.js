@@ -50,7 +50,7 @@ async function seedData() {
 
 function authenticate(req) { const auth = req.headers.authorization || ""; if (!auth.startsWith("Bearer ")) return null; return dbGet(`SELECT s.token, u.id, u.identifier, u.name, u.role, u.is_temp FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ?`, [auth.slice(7), new Date().toISOString()]); }
 function requireAuth(req, res) { const sess = authenticate(req); if (!sess) { json(res, 401, { error: "Unauthorized." }); return null; } return sess; }
-function requireAdmin(req, res) { const sess = requireAuth(req, res); if (!sess) return null; if (sess.role !== "ADMIN") { json(res, 403, { error: "Admin only." }); return null; } return sess; }
+function requireAdmin(req, res) { const sess = requireAuth(req, res); if (!sess) return null; if (sess.role?.toUpperCase() !== "ADMIN") { json(res, 403, { error: "Admin only." }); return null; } return sess; }
 function json(res, code, body) { res.writeHead(code, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }); res.end(JSON.stringify(body)); }
 
 async function readBody(req) {
@@ -64,7 +64,7 @@ async function getAllData() { return { rooms: await dbAll("SELECT * FROM rooms O
 
 async function handleApi(req, res, path_) {
   const m = req.method;
-  if (m==="POST" && path_==="/api/login") { const { identifier, password } = await readBody(req); const user = await dbGet("SELECT * FROM users WHERE identifier=?", [identifier.trim()]); if (!user || !user.salt) return json(res, 401, { error: "ID not authorized." }); if (hashPwd(password, user.salt) !== user.password_hash) return json(res, 401, { error: "Wrong password." }); const token = crypto.randomBytes(32).toString("hex"); await dbRun("INSERT INTO sessions VALUES (?,?,?)", [token, user.id, new Date(Date.now()+12*3600*1000).toISOString()]); return json(res, 200, { token, user: { identifier: user.identifier, name: user.name, role: user.role, is_temp: Boolean(user.is_temp) } }); }
+  if (m==="POST" && path_==="/api/login") { const { identifier, password } = await readBody(req); const user = await dbGet("SELECT * FROM users WHERE identifier=?", [identifier.trim()]); if (!user || !user.salt) return json(res, 401, { error: "ID not authorized." }); if (hashPwd(password, user.salt) !== user.password_hash) return json(res, 401, { error: "Wrong password." }); const token = crypto.randomBytes(32).toString("hex"); await dbRun("INSERT INTO sessions VALUES (?,?,?)", [token, user.id, new Date(Date.now()+12*3600*1000).toISOString()]); const role = user.role?.toUpperCase() || user.role; return json(res, 200, { token, user: { identifier: user.identifier, name: user.name, role: role, is_temp: Boolean(user.is_temp) } }); }
   if (m==="POST" && path_==="/api/logout") { const s = authenticate(req); if (s) await dbRun("DELETE FROM sessions WHERE token=?", [s.token]); return json(res, 200, { ok: true }); }
   if (m==="GET" && path_==="/api/me") { const s = requireAuth(req, res); if (!s) return; return json(res, 200, { identifier: s.identifier, name: s.name, role: s.role, is_temp: Boolean(s.is_temp) }); }
   if (m==="POST" && path_==="/api/change-password") { const s = requireAuth(req, res); if (!s) return; const { new_password } = await readBody(req); if (new_password.length < 6) return json(res, 400, { error: "Min 6 chars" }); const salt = crypto.randomBytes(16).toString("hex"); await dbRun("UPDATE users SET salt=?, password_hash=?, is_temp=0 WHERE id=?", [salt, hashPwd(new_password, salt), s.id]); return json(res, 200, { ok: true }); }
