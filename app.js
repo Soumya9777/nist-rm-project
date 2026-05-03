@@ -189,6 +189,11 @@ async function addTeacher() {
   try { S.data = await api("POST", "/api/admin/faculty", { identifier: $("mt-eid").value, name: $("mt-name").value, password: $("mt-pwd").value }); setMsg("mt-msg", "Teacher added.", true); $("mt-eid").value = $("mt-name").value = $("mt-pwd").value = ""; populateAdminSelects(); } catch (err) { setMsg("mt-msg", err.message); }
 }
 
+async function addStudent() {
+  clearMsg("ms-msg");
+  try { await api("POST", "/api/admin/students", { identifier: $("ms-rid").value, name: $("ms-name").value, password: $("ms-pwd").value }); setMsg("ms-msg", "Student added.", true); $("ms-rid").value = $("ms-name").value = $("ms-pwd").value = ""; } catch (err) { setMsg("ms-msg", err.message); }
+}
+
 let allUsers = [];
 async function loadUsers() { $("users-table").innerHTML = "Loading..."; try { const d = await api("GET", "/api/admin/users"); allUsers = d.users || []; renderUsersTable(allUsers); } catch (err) { $("users-table").innerHTML = `<p class="msg-err">${err.message}</p>`; } }
 function renderUsersTable(users) { if (!users.length) { $("users-table").innerHTML = `<p>No users.</p>`; return; } $("users-table").innerHTML = `<table><thead><tr><th>Name</th><th>ID</th><th>Role</th><th>Password</th><th>Action</th></tr></thead><tbody>` + users.map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.identifier)}</td><td>${esc(u.role)}</td><td><span class="badge ${u.is_temp?'badge-busy':'badge-free'}">${u.is_temp?'Temp':'Secure'}</span></td><td>${u.role!=="ADMIN"?`<button class="btn btn-secondary btn-sm" onclick="resetPwd('${esc(u.id)}','${esc(u.name)}')">Reset</button>`:""} ${S.user.id!==u.id?`<button class="btn btn-danger btn-sm" onclick="deleteUser('${esc(u.id)}','${esc(u.name)}')">Delete</button>`:""}</td></tr>`).join("") + `</tbody></table>`; }
